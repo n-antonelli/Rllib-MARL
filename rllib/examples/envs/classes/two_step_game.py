@@ -9,7 +9,7 @@ class TwoStepGame(MultiAgentEnv):
 
     def __init__(self, env_config):
         super().__init__()
-        self.action_space = Discrete(2)
+        self.action _space = Discrete(2)
         self.state = None
         self.agent_1 = 0
         self.agent_2 = 1
@@ -19,7 +19,7 @@ class TwoStepGame(MultiAgentEnv):
         self.with_state = env_config.get("separate_state_space", False)
         self._agent_ids = {0, 1}
         if not self.one_hot_state_encoding:
-            self.observation_space = Discrete(6)
+            self.observation_space = Discrete(6) # 6 estados
             self.with_state = False
         else:
             # Each agent gets the full state (one-hot encoding of which of the
@@ -28,7 +28,7 @@ class TwoStepGame(MultiAgentEnv):
             if self.with_state:
                 self.observation_space = Dict(
                     {
-                        "obs": MultiDiscrete([2, 2, 2, 3]),
+                        "obs": MultiDiscrete([2, 2, 2, 3]), # [Estado 1, Estado 2, Estado 3, ID agent?] (ID agent -> 0, 1, 2)?
                         ENV_STATE: MultiDiscrete([2, 2, 2]),
                     }
                 )

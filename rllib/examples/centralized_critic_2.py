@@ -54,13 +54,13 @@ parser.add_argument(
     "be achieved within --stop-timesteps AND --stop-iters.",
 )
 parser.add_argument(
-    "--stop-iters", type=int, default=100, help="Number of iterations to train."
+    "--stop-iters", type=int, default=80, help="Number of iterations to train." #100
 )
 parser.add_argument(
-    "--stop-timesteps", type=int, default=100000, help="Number of timesteps to train."
+    "--stop-timesteps", type=int, default=100000, help="Number of timesteps to train." #100000
 )
 parser.add_argument(
-    "--stop-reward", type=float, default=7.99, help="Reward at which we stop training."
+    "--stop-reward", type=float, default=7.99, help="Reward at which we stop training." #7.99
 )
 
 

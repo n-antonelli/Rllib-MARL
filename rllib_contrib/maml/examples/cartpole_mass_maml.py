@@ -1,9 +1,9 @@
 from gymnasium.wrappers import TimeLimit
-from rllib_maml.maml import MAML, MAMLConfig
+from rllib_contrib.maml.src.rllib_maml.maml import MAML, MAMLConfig
 
 import ray
 from ray import air, tune
-from ray.rllib.examples.env.cartpole_mass import CartPoleMassEnv
+from ray.rllib.examples.envs.classes.cartpole_mass import CartPoleMassEnv
 from ray.tune.registry import register_env
 
 if __name__ == "__main__":
