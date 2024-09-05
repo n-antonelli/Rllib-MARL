@@ -17,6 +17,8 @@ from typing import (
     ValuesView,
 )
 
+#from ray.rllib.core.rl_module.rl_module import validate_module_id
+
 from ray.rllib.core.models.specs.typing import SpecType
 from ray.rllib.core.rl_module.rl_module import RLModule, RLModuleSpec
 
@@ -68,7 +70,8 @@ class MultiRLModule(RLModule):
             config: An optional MultiRLModuleConfig to use. If None, will use
                 `MultiRLModuleConfig()` as default config.
         """
-        super().__init__(config or MultiRLModuleConfig())
+        super().__init__(config or MultiRLModuleConfig()) # super().__init__(config or MultiRLModuleConfig()
+        self._rl_modules = {}
 
     @override(RLModule)
     def setup(self):
@@ -170,9 +173,9 @@ class MultiRLModule(RLModule):
                 Warnings are raised if the module id is not valid according to the
                 logic of ``validate_module_id()``.
         """
-        from ray.rllib.core.rl_module import validate_module_id
+        #from ray.rllib.core.rl_module.rl_module import v
 
-        validate_module_id(module_id)
+        #validate_module_id(module_id)
 
         if module_id in self._rl_modules and not override:
             raise ValueError(
@@ -380,7 +383,7 @@ class MultiRLModule(RLModule):
         self,
         forward_fn_name: str,
         batch: Dict[ModuleID, Any],
-        **kwargs,
+        **kwargs: object,
     ) -> Dict[ModuleID, Dict[ModuleID, Any]]:
         """This is a helper method that runs the forward pass for the given module.
 
@@ -554,7 +557,7 @@ class MultiRLModuleSpec:
         # by the learner if necessary.
         module_specs = {
             module_id: RLModuleSpec.from_module(rl_module.unwrapped())
-            for module_id, rl_module in module._rl_modules.items()
+            for module_id, rl_module in module.rl_modules.items()    #_rl_modules
         }
         multi_rl_module_class = module.__class__
         return MultiRLModuleSpec(

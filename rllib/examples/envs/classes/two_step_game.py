@@ -5,11 +5,11 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
 
 
 class TwoStepGame(MultiAgentEnv):
-    action_space = Discrete(2)
+    action_space = Discrete(2) # Cada agente puede elegir 0/1
 
     def __init__(self, env_config):
         super().__init__()
-        self.action _space = Discrete(2)
+        self.action_space = Discrete(2) # Cada agente puede elegir 0/1
         self.state = None
         self.agent_1 = 0
         self.agent_2 = 1
@@ -19,7 +19,7 @@ class TwoStepGame(MultiAgentEnv):
         self.with_state = env_config.get("separate_state_space", False)
         self._agent_ids = {0, 1}
         if not self.one_hot_state_encoding:
-            self.observation_space = Discrete(6) # 6 estados
+            self.observation_space = Discrete(6) # 6 posibles estados
             self.with_state = False
         else:
             # Each agent gets the full state (one-hot encoding of which of the
@@ -33,7 +33,7 @@ class TwoStepGame(MultiAgentEnv):
                     }
                 )
             else:
-                self.observation_space = MultiDiscrete([2, 2, 2, 3])
+                self.observation_space = MultiDiscrete([2, 2, 2, 3]) # [Estado 1, Estado 2, Estado 3, ID agent?] (ID agent -> 0, 1, 2)?
 
     def reset(self, *, seed=None, options=None):
         if seed is not None:
@@ -41,7 +41,7 @@ class TwoStepGame(MultiAgentEnv):
         self.state = np.array([1, 0, 0])
         return self._obs(), {}
 
-    def step(self, action_dict):
+    def step(self, action_dict): # Action_dict -> diccionario con {acción ag1, acción ag2}
         if self.actions_are_logits:
             action_dict = {
                 k: np.random.choice([0, 1], p=v) for k, v in action_dict.items()

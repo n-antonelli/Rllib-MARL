@@ -40,6 +40,10 @@ from ray.rllib.utils.metrics import (
 )
 from ray.rllib.utils.test_utils import check_learning_achieved
 
+Method1 = "parameter_sharing"
+Method2 = "centralized_critic"
+Method = Method2
+
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--framework",
@@ -54,7 +58,7 @@ parser.add_argument(
     "be achieved within --stop-timesteps AND --stop-iters.",
 )
 parser.add_argument(
-    "--stop-iters", type=int, default=80, help="Number of iterations to train." #100
+    "--stop-iters", type=int, default=30, help="Number of iterations to train." #100
 )
 parser.add_argument(
     "--stop-timesteps", type=int, default=100000, help="Number of timesteps to train." #100000
@@ -82,7 +86,8 @@ class FillInActions(DefaultCallbacks):
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space(Discrete(2))
 
-        # set the opponent actions into the observation
+        # set the o
+        # pip nent actions into the observation
         _, opponent_batch = original_batches[other_id]
         opponent_actions = np.array(
             [action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]
@@ -141,7 +146,17 @@ if __name__ == "__main__":
         )
         .callbacks(FillInActions)
         .training(model={"custom_model": "cc_model"})
-        .multi_agent(
+
+        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
+        .resources(num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", "0")))
+    )
+    if Method == Method1: # Porqué tiene diferentes políticas? No es Paremeter sharing?
+        PPOConfig.multi_agent(
+            policies={f"p{i}" for i in range(args.num_agents)},
+            policy_mapping_fn=lambda aid, *a, **kw: f"p{aid}",
+        )
+    elif Method == Method2:
+        PPOConfig.multi_agent(
             policies={
                 "pol1": (None, observer_space, action_space, {}),
                 "pol2": (None, observer_space, action_space, {}),
@@ -151,9 +166,8 @@ if __name__ == "__main__":
             else "pol2",
             observation_fn=central_critic_observer,
         )
-        # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
-        .resources(num_gpus=int(os.environ.get("RLLIB_NUM_GPUS", "0")))
-    )
+
+
 
     stop = {
         TRAINING_ITERATION: args.stop_iters,

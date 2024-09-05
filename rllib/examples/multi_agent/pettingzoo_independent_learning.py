@@ -70,6 +70,8 @@ parser = add_rllib_example_script_args(
 
 if __name__ == "__main__":
     args = parser.parse_args()
+    args.num_agents = 2
+    args.enable_new_api_stack = True
 
     assert args.num_agents > 0, "Must set --num-agents > 0 when running this script!"
     assert (
@@ -82,7 +84,7 @@ if __name__ == "__main__":
     register_env("env", lambda _: PettingZooEnv(waterworld_v4.env()))
 
     # Policies are called just like the agents (exact 1:1 mapping).
-    policies = {f"pursuer_{i}" for i in range(args.num_agents)}
+    policies = {f"pursuer_{i}" for i in range(args.num_agents)}   # Crea una política para cada agente
 
     base_config = (
         get_trainable_cls(args.algo)
@@ -91,7 +93,7 @@ if __name__ == "__main__":
         .multi_agent(
             policies=policies,
             # Exact 1:1 mapping from AgentID to ModuleID.
-            policy_mapping_fn=(lambda aid, *args, **kwargs: aid),
+            policy_mapping_fn=(lambda aid, *args, **kwargs: aid), # Mapea la política con el agente
         )
         .training(
             vf_loss_coeff=0.005,
