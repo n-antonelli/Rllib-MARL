@@ -28,7 +28,6 @@ parser = add_rllib_example_script_args(
     default_iters=200,
     default_timesteps=100000,
     default_reward=600.0,
-
 )
 # TODO (sven): This arg is currently ignored (hard-set to 2).
 parser.add_argument("--num-policies", type=int, default=2)
@@ -36,13 +35,7 @@ parser.add_argument("--num-policies", type=int, default=2)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-
-
-    # TODO (nico): This default arg is currently ignored (hard-set to 2).
     args.num_agents = 2
-    args.evaluation_interval = 1 # Para evaluar
-
-
     # Register our environment with tune.
     if args.num_agents > 0:
         register_env(
@@ -51,7 +44,7 @@ if __name__ == "__main__":
         )
 
     base_config = (
-        get_trainable_cls(args.algo) # PPO
+        get_trainable_cls(args.algo)
         .get_default_config()
         .environment("env" if args.num_agents > 0 else "CartPole-v1")
         .env_runners(
@@ -65,10 +58,17 @@ if __name__ == "__main__":
     )
 
     # Add a simple multi-agent setup.
-    if args.num_agents > 0: # Porqué tiene diferentes políticas? No es Paremeter sharing?
+    #if args.num_agents > 0:
+    #    base_config.multi_agent(
+    #        policies={f"p{i}" for i in range(args.num_agents)},
+    #        policy_mapping_fn=lambda aid, *a, **kw: f"p{aid}",
+    #    )
+
+    if args.num_agents > 0:
         base_config.multi_agent(
-            policies={f"p{i}" for i in range(args.num_agents)},
-            policy_mapping_fn=lambda aid, *a, **kw: f"p{aid}",
+        policies = {"p0"},
+        # All agents map to the exact same policy.
+        policy_mapping_fn = (lambda aid, *a, **kw: "p0"),
         )
 
     run_rllib_example_script_experiment(base_config, args)
