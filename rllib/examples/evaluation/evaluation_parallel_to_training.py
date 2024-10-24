@@ -93,6 +93,7 @@ parser.set_defaults(
     evaluation_num_env_runners=2,
     evaluation_interval=1,
     evaluation_duration_unit="timesteps",
+    evaluation_duration=1000, # 10 (original), 500 no alcanza
 )
 parser.add_argument(
     "--evaluation-parallel-to-training-wo-thread",

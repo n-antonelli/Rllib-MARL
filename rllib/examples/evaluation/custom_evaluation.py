@@ -182,8 +182,8 @@ if __name__ == "__main__":
         )
         .evaluation(
             # Do we use the custom eval function defined above?
-            custom_evaluation_function=(
-                None if args.no_custom_eval else custom_eval_function
+            custom_evaluation_function=( # None if args.no_custom_eval else
+               custom_eval_function
             ),
             # Number of eval EnvRunners to use.
             evaluation_num_env_runners=2,

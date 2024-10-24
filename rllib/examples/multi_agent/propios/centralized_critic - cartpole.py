@@ -67,18 +67,18 @@ def central_critic_observer(agent_obs, **kw):
 parser = add_rllib_example_script_args(
     default_iters=200,
     default_timesteps=100000,
-    default_reward=600.0,
+    default_reward=400.0,
 )
 # TODO (sven): This arg is currently ignored (hard-set to 2).
 parser.add_argument("--num-policies", type=int, default=2)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    args.num_agents = 2
+    args.num_agents = 3
 
 
 
-
+    # Prueba para testear
     args.as_test = True
 
 
