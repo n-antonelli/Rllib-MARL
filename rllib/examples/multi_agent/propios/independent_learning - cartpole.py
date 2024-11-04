@@ -63,15 +63,17 @@ from ray.rllib.examples.envs.classes.multi_agent import MultiAgentCartPole
 
 parser = add_rllib_example_script_args(
     default_iters=200,
-    default_timesteps=100000,
-    default_reward=600.0,
+    default_timesteps=200000,
+    default_reward=3000.0,
 )
+Cantidad_agentes = 2
 # TODO (sven): This arg is currently ignored (hard-set to 2).
-parser.add_argument("--num-policies", type=int, default=2)
+parser.add_argument("--num-policies", type=int, default=Cantidad_agentes)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    args.num_agents = 2
+    args.num_agents = Cantidad_agentes
+    args.verbose = 3
 #    args.enable_new_api_stack = True
 
 #    assert args.num_agents > 0, "Must set --num-agents > 0 when running this script!"

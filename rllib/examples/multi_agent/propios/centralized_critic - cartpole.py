@@ -44,12 +44,18 @@ from ray.rllib.utils.metrics import (
     NUM_ENV_STEPS_SAMPLED_LIFETIME,
 )
 from ray.rllib.examples.envs.classes.multi_agent import MultiAgentCartPole
+import copy
+"""
+Modificar path --> os.environ["RAY_CHDIR_TO_TRIAL_DIR"] = "0"
+def trial_str_creator(trial):
+    return "{}_{}_123".format(trial.trainable_name, trial.trial_id)
+"""
 tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
 
 def central_critic_observer(agent_obs, **kw):
     """Rewrites the agent obs to include opponent data for training."""
-
+    """
     new_obs = {
         0: {
             "own_obs": agent_obs[0],
@@ -62,27 +68,38 @@ def central_critic_observer(agent_obs, **kw):
             "opponent_action": 0,  # filled in by FillInActions
         },
     }
+    """
+    new_obs = {}
+    for agente in range(len(agent_obs)):
+        opponent_obs = copy.deepcopy(agent_obs)  # Crear una copia profunda para no modificar original
+        # print(opponent_obs, ' ', agent_obs)
+        del opponent_obs[agente]  # Modificar nueva variable para que no tenga su propia observación
+        print(opponent_obs)
+        new_obs[agente] = {"own_obs": agent_obs[agente],
+                           "opponent_obs": opponent_obs,
+                           "opponent_action": 0,
+                           }
+
+
     return new_obs
+
 
 parser = add_rllib_example_script_args(
     default_iters=200,
-    default_timesteps=100000,
-    default_reward=1200.0,
+    default_timesteps=200000,
+    default_reward=3000.0,
 )
+Cantidad_agentes = 2
 # TODO (sven): This arg is currently ignored (hard-set to 2).
-parser.add_argument("--num-policies", type=int, default=2)
+parser.add_argument("--num-policies", type=int, default=Cantidad_agentes)
 
 if __name__ == "__main__":
     args = parser.parse_args()
-    args.num_agents = 3
-
-
+    args.num_agents = Cantidad_agentes
+    args.verbose = 3
 
     # Prueba para testear
-    args.as_test = True
-
-
-
+    #args.as_test = True
 
     """ Espacio de acción y de observación escrito a mano
     action_space = Discrete(1)
@@ -116,12 +133,17 @@ if __name__ == "__main__":
             observation_fn=central_critic_observer,
         )
         .training(
+            #gamma=0.9, lr=0.01, kl_coeff=0.3, train_batch_size_per_learner=256, clip_param=0.2
             model={
                 "vf_share_layers": True,
             },
             vf_loss_coeff=0.005,
         )
-        .api_stack(enable_rl_module_and_learner=True)
+        #.trial_name_creator(trial_str_creator)
+        #.trial_dirname_creator(trial_str_creator)
+        .api_stack(enable_rl_module_and_learner=True,
+                   #enable_env_runner_and_connector_v2=True,
+                   )
         .rl_module(
             rl_module_spec=MultiRLModuleSpec(
                module_specs={p: RLModuleSpec() for p in {f"p{i}" for i in range(args.num_agents)}},
