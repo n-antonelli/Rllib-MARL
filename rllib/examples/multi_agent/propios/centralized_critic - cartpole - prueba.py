@@ -45,11 +45,20 @@ from ray.rllib.utils.metrics import (
 )
 from ray.rllib.examples.envs.classes.multi_agent import MultiAgentCartPole
 import copy
+import random
+
 """
 Modificar path --> os.environ["RAY_CHDIR_TO_TRIAL_DIR"] = "0"
 def trial_str_creator(trial):
     return "{}_{}_123".format(trial.trainable_name, trial.trial_id)
 """
+# Reproducibilidad
+import torch
+import tensorflow as tf
+torch.manual_seed(0)
+tf.random.set_seed(0)
+
+
 tf1, tf, tfv = try_import_tf()
 torch, nn = try_import_torch()
 
@@ -68,7 +77,7 @@ class FillInActions(DefaultCallbacks):
         **kwargs,
     ):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
-        other_id = 1 if agent_id == 0 else 0 # Solo funciona para dos agentes!!!
+        other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space(Discrete(2))
 
         # set the opponent actions into the observation
@@ -76,7 +85,18 @@ class FillInActions(DefaultCallbacks):
         opponent_actions = np.array(
             [action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]
         )
-        to_update[:, -2:] = opponent_actions
+        if int(to_update[:, -2:].shape[0]) > int(opponent_actions.shape[0]): # TODO: lote postprocesado no coincide con lote del oponente
+            to_update[:opponent_actions.shape[0], -2:] = opponent_actions
+            print('mayor')
+        elif int(to_update[:, -2:].shape[0]) < int(opponent_actions.shape[0]):
+            to_update[:, -2:] = opponent_actions[:to_update.shape[0],:]
+            print('menor')
+        elif int(to_update[:, -2:].shape[0]) == int(opponent_actions.shape[0]):
+            to_update[:, -2:] = opponent_actions
+            print('igual')
+        else:
+            # to_update[:, -2:] = opponent_actions
+            print(int(to_update[:, -2:].shape[0]), int(opponent_actions.shape[0]))
 
 def central_critic_observer(agent_obs, **kw):
     """Rewrites the agent obs to include opponent data for training."""
@@ -112,17 +132,22 @@ def central_critic_observer(agent_obs, **kw):
 parser = add_rllib_example_script_args(
     default_iters=200,
     default_timesteps=200000,
-    default_reward=3000.0,
+    default_reward=600,
 )
 Cantidad_agentes = 2
+semilla = 42
 # TODO (sven): This arg is currently ignored (hard-set to 2).
 parser.add_argument("--num-policies", type=int, default=Cantidad_agentes)
 
 if __name__ == "__main__":
+    random.seed(semilla)
+    np.random.seed(semilla)
+
     args = parser.parse_args()
     args.num_agents = Cantidad_agentes
     args.verbose = 2
     args.log_level = "ERROR"
+    #args.seed = 6
 
     # Prueba para testear
     #args.as_test = True
@@ -142,8 +167,8 @@ if __name__ == "__main__":
     register_env("env",lambda _: MultiAgentCartPole(config={"num_agents": args.num_agents}))
 
     base_config = (
-        get_trainable_cls(args.algo)
-        .get_default_config()
+        PPOConfig()
+        .framework(args.framework)
         .environment("env")
         .env_runners(
             # TODO (sven): MAEnvRunner does not support vectorized envs yet
@@ -158,6 +183,7 @@ if __name__ == "__main__":
             policy_mapping_fn=lambda aid, *a, **kw: f"p{aid}",
             observation_fn=central_critic_observer,
         )
+        .callbacks(FillInActions)
         .training(
             #gamma=0.9, lr=0.01, kl_coeff=0.3, train_batch_size_per_learner=256, clip_param=0.2
             model={
@@ -165,6 +191,7 @@ if __name__ == "__main__":
             },
             vf_loss_coeff=0.005,
         )
+        .debugging(log_level="ERROR", seed=semilla)
         #.trial_name_creator(trial_str_creator)
         #.trial_dirname_creator(trial_str_creator)
         .api_stack(enable_rl_module_and_learner=True,
@@ -176,4 +203,19 @@ if __name__ == "__main__":
             ),
         )
     )
-    run_rllib_example_script_experiment(base_config, args) # success_metric = "env_runners/episode_return_mean" # la métrica a evaluar
+
+    stop = {
+        TRAINING_ITERATION: args.stop_iters,
+        NUM_ENV_STEPS_SAMPLED_LIFETIME: args.stop_timesteps,
+        f"{ENV_RUNNER_RESULTS}/{EPISODE_RETURN_MEAN}": args.stop_reward,
+    }
+
+    tuner = tune.Tuner(
+        "PPO",
+        param_space=base_config.to_dict(),
+        run_config=air.RunConfig(stop=stop, verbose=1),
+    )
+    results = tuner.fit()
+
+    if args.as_test:
+        check_learning_achieved(results, args.stop_reward)

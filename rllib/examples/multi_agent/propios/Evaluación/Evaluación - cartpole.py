@@ -2,12 +2,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 
-MARL = 'independent'    # 'independent' 'sharing' 'critic'
+MARL = 'critic'    # 'independent' 'sharing' 'critic'
 ENV = 'cartpole'    # 'cartpole' 'waterworld' '
 # CRITIC --> 2 ag - obs mod - PPO_2024-11-01_10-11-07\\PPO_env_c19a9_00000_0_2024-11-01_10-11-07
+# CRITIC - PPOConf --> 2 ag - obs mod - PPOConf - PPO_2024-11-04_11-11-32\\PPO_env_b1411_00000_0_2024-11-04_11-11-32
 # SHARING --> 2 ag - sharing - PPO_2024-11-01_12-05-31\\PPO_env_bcba8_00000_0_2024-11-01_12-05-31
 # IND --> 2 ag - ind - PPO_2024-11-04_09-12-00\\PPO_env_fe8ba_00000_0_2024-11-04_09-12-00
-with open('C:\\Users\\Usuario\\ray_results\\2 ag - ind - PPO_2024-11-04_09-12-00\\PPO_env_fe8ba_00000_0_2024-11-04_09-12-00\\result.json', 'r') as file:
+with open('C:\\Users\\Usuario\\ray_results\\PPO_2024-11-05_10-23-38\PPO_env_2cd92_00000_0_2024-11-05_10-23-41\\result.json', 'r') as file:
     data = []
     for episode in file:
         data.append(json.loads(episode))

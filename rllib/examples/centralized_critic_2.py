@@ -88,6 +88,7 @@ class FillInActions(DefaultCallbacks):
             [action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]
         )
         to_update[:, -2:] = opponent_actions
+        print(to_update[:, -2:].shape, opponent_actions.shape)
 
 
 def central_critic_observer(agent_obs, **kw):
